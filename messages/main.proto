@@ -1,0 +1,7 @@
+syntax = "proto3";
+package main;
+
+// [RINF:DART-SIGNAL]
+message StartButtonPressed { 
+    // bool start = 1;
+}
