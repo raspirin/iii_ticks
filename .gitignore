@@ -48,3 +48,6 @@ target/
 
 # Generated messages
 */**/messages/
+
+# native assets
+assets/native/*

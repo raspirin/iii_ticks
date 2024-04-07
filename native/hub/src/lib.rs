@@ -2,6 +2,7 @@ use rinf::debug_print;
 use tokio_with_wasm::tokio;
 
 mod messages;
+mod player;
 
 rinf::write_interface!();
 
