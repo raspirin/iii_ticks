@@ -400,6 +400,7 @@ version = "0.1.0"
 dependencies = [
  "cpal",
  "prost",
+ "rb",
  "rinf",
  "symphonia",
  "tokio_with_wasm",
@@ -804,6 +805,12 @@ checksum = "291ec9ab5efd934aaf503a6466c5d5251535d108ee747472c3977cc5acc868ef"
 dependencies = [
  "proc-macro2",
 ]
+
+[[package]]
+name = "rb"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56cf8381505b60ae18a4097f1d0be093287ca3bf4fbb23d36ac5ad3bba335daa"
 
 [[package]]
 name = "redox_syscall"

@@ -1,9 +1,9 @@
+use crate::{audio::Audio, output::{AudioOutput, AudioOutputFactory, Output}};
 use std::fs::File;
-use crate::{audio::Audio, output::Output};
 
 pub struct Player {
     audio: Audio,
-    output: Option<Output>,
+    output: Option<Box<dyn AudioOutput>>,
 }
 
 impl Player {
@@ -13,7 +13,31 @@ impl Player {
 
         Self {
             audio,
-            output: None
+            output: None,
+        }
+    }
+
+    pub fn play(&mut self) {
+        loop {
+            let packet = self.audio.format.next_packet().unwrap();
+            if packet.track_id() != self.audio.track_id {
+                continue;
+            }
+
+            match self.audio.decoder.decode(&packet) {
+                Ok(decoded) => {
+                    if self.output.is_none() {
+                        let spec = *decoded.spec();
+                        let duration = decoded.capacity() as u64;
+                        self.output.replace(AudioOutputFactory::open(&spec, duration));
+                    }
+
+                    if let Some(output) = &mut self.output {
+                        output.write(decoded);
+                    }
+                },
+                Err(e) => panic!("decoded error: {e}"),
+            }
         }
     }
 }
@@ -24,6 +48,7 @@ mod tests {
 
     #[test]
     fn make_player() {
-        let player = Player::new("../../assets/native/test.ogg");
+        let mut player = Player::new("../../assets/native/test.ogg");
+        player.play();
     }
 }

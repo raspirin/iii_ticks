@@ -7,9 +7,9 @@ use symphonia::core::{
 };
 
 pub struct Audio {
-    format: Box<dyn FormatReader>,
-    track_id: u32,
-    decoder: Box<dyn Decoder>,
+    pub format: Box<dyn FormatReader>,
+    pub track_id: u32,
+    pub decoder: Box<dyn Decoder>,
 }
 
 impl Audio {
@@ -43,21 +43,6 @@ impl Audio {
         }
     }
 
-    pub fn get_next_sample(&mut self) -> AudioBufferRef {
-        let packet = match self.format.next_packet() {
-            Ok(packet) => packet,
-            Err(e) => panic!("{e}"),
-        };
-
-        assert_eq!(self.track_id, packet.track_id());
-
-        let decoded = match self.decoder.decode(&packet) {
-            Ok(decoded) => decoded,
-            Err(e) => panic!("{e}"),
-        };
-
-        return decoded;
-    }
 }
 
 #[cfg(test)]
@@ -70,8 +55,5 @@ mod tests {
     fn test_make_audio() {
         let file = File::open("../../assets/native/test.ogg").unwrap();
         let mut audio = Audio::new(Box::new(file));
-        let decoded = audio.get_next_sample();
-        let meta = decoded.spec();
-        // println!("{:?}", meta)
     }
 }
