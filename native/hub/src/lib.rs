@@ -1,7 +1,9 @@
 use rinf::debug_print;
 use tokio_with_wasm::tokio;
 
+mod audio;
 mod messages;
+mod output;
 mod player;
 
 rinf::write_interface!();
@@ -18,5 +20,5 @@ pub async fn start() {
         let _start_button_pressed = msg.message;
 
         debug_print!("hello, world");
-    } 
+    }
 }
