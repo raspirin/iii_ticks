@@ -5,6 +5,21 @@ use symphonia::core::{
     conv::{ConvertibleSample, IntoSample},
     units::Duration,
 };
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum AudioOutputError {
+    #[error("No availavle for default host.")]
+    DeviceNotAvailable,
+    #[error("Default stream config error: {0}")]
+    DefaultStreamConfigError(#[from] cpal::DefaultStreamConfigError),
+    #[error("Unimplemented format: {0}")]
+    UnimplementedFormat(cpal::SampleFormat),
+    #[error("Player Stream Error: {0}")]
+    PlayStreamError(#[from] cpal::PlayStreamError),
+    #[error("Build stream error: {0}")]
+    BuildStreamError(#[from] cpal::BuildStreamError),
+}
 
 pub trait AudioOutput {
     fn write(&mut self, decoded: AudioBufferRef);
@@ -24,14 +39,19 @@ pub trait AudioOutputSample:
 
 impl AudioOutputSample for f32 {}
 
-pub fn open(spec: &SignalSpec, duration: Duration) -> Box<dyn AudioOutput> {
+pub fn try_open(
+    spec: &SignalSpec,
+    duration: Duration,
+) -> Result<Box<dyn AudioOutput>, AudioOutputError> {
     let host = cpal::default_host();
-    let device = host.default_output_device().unwrap();
-    let config = device.default_output_config().unwrap();
+    let device = host
+        .default_output_device()
+        .ok_or(AudioOutputError::DeviceNotAvailable)?;
+    let config = device.default_output_config()?;
 
     match config.sample_format() {
-        cpal::SampleFormat::F32 => Box::new(Output::<f32>::open(spec, duration, device)),
-        format => panic!("unimplemented sample format: {format}"),
+        cpal::SampleFormat::F32 => Ok(Box::new(Output::<f32>::try_open(spec, duration, device)?)),
+        format => Err(AudioOutputError::UnimplementedFormat(format)),
     }
 }
 
@@ -42,7 +62,11 @@ pub struct Output<T: AudioOutputSample> {
 }
 
 impl<T: AudioOutputSample> Output<T> {
-    pub fn open(spec: &SignalSpec, duration: Duration, device: cpal::Device) -> Output<T> {
+    pub fn try_open(
+        spec: &SignalSpec,
+        duration: Duration,
+        device: cpal::Device,
+    ) -> Result<Output<T>, AudioOutputError> {
         let channels = spec.channels.count();
 
         let config = cpal::StreamConfig {
@@ -55,26 +79,24 @@ impl<T: AudioOutputSample> Output<T> {
         let ring: SpscRb<T> = SpscRb::new(ring_len);
         let (rb_producer, rb_consumer) = (ring.producer(), ring.consumer());
 
-        let stream = device
-            .build_output_stream(
-                &config,
-                move |data: &mut [T], &_| {
-                    let written = rb_consumer.read(data).unwrap_or(0);
-                    data[written..].iter_mut().for_each(|x| *x = T::MID);
-                },
-                move |e| eprintln!("consume stream error: {e}"),
-                None,
-            )
-            .unwrap();
-        stream.play().unwrap();
+        let stream = device.build_output_stream(
+            &config,
+            move |data: &mut [T], &_| {
+                let written = rb_consumer.read(data).unwrap_or(0);
+                data[written..].iter_mut().for_each(|x| *x = T::MID);
+            },
+            move |e| eprintln!("consume stream error: {e}"),
+            None,
+        )?;
+        stream.play()?;
 
         let sample_buf = SampleBuffer::new(duration, *spec);
 
-        Self {
+        Ok(Self {
             ring_buffer: rb_producer,
             sample_buffer: sample_buf,
             stream,
-        }
+        })
     }
 
     pub fn write(&mut self, decoded: AudioBufferRef) {

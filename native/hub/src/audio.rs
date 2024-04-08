@@ -4,6 +4,17 @@ use symphonia::core::{
     io::{MediaSource, MediaSourceStream},
     probe::Hint,
 };
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum AudioError {
+    #[error("Probe error: {0}")]
+    ProbeError(#[source] symphonia::core::errors::Error),
+    #[error("Fount no playable track.")]
+    TrackNotFound,
+    #[error("Decoder error: {0}")]
+    DecoderError(#[source] symphonia::core::errors::Error),
+}
 
 pub struct Audio {
     pub format: Box<dyn FormatReader>,
@@ -12,15 +23,21 @@ pub struct Audio {
 }
 
 impl Audio {
-    pub fn new(source: Box<dyn MediaSource>) -> Self {
+    pub fn try_new(source: Box<dyn MediaSource>) -> Result<Self, AudioError> {
         let mss = MediaSourceStream::new(source, Default::default());
 
         let mut hint = Hint::new();
         hint.with_extension("ogg");
 
-        let probed = symphonia::default::get_probe()
-            .format(&hint, mss, &Default::default(), &Default::default())
-            .unwrap();
+        let probed = match symphonia::default::get_probe().format(
+            &hint,
+            mss,
+            &Default::default(),
+            &Default::default(),
+        ) {
+            Ok(p) => p,
+            Err(e) => return Err(AudioError::DecoderError(e)),
+        };
 
         let format = probed.format;
 
@@ -28,18 +45,20 @@ impl Audio {
             .tracks()
             .iter()
             .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
-            .unwrap();
+            .ok_or(AudioError::TrackNotFound)?;
         let track_id = track.id;
 
-        let decoder = symphonia::default::get_codecs()
-            .make(&track.codec_params, &Default::default())
-            .unwrap();
+        let decoder =
+            match symphonia::default::get_codecs().make(&track.codec_params, &Default::default()) {
+                Ok(d) => d,
+                Err(e) => return Err(AudioError::DecoderError(e)),
+            };
 
-        Self {
+        Ok(Self {
             format,
             track_id,
             decoder,
-        }
+        })
     }
 }
 
@@ -52,6 +71,6 @@ mod tests {
     #[test]
     fn test_make_audio() {
         let file = File::open("../../assets/native/test.ogg").unwrap();
-        let mut audio = Audio::new(Box::new(file));
+        let mut audio = Audio::try_new(Box::new(file));
     }
 }

@@ -1,7 +1,10 @@
+#![deny(clippy::unwrap_used)]
+
 use rinf::debug_print;
 use tokio_with_wasm::tokio;
 
 mod audio;
+#[allow(clippy::unwrap_used)]
 mod messages;
 mod output;
 mod player;

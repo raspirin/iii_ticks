@@ -403,6 +403,7 @@ dependencies = [
  "rb",
  "rinf",
  "symphonia",
+ "thiserror",
  "tokio_with_wasm",
  "wasm-bindgen",
 ]
