@@ -24,18 +24,14 @@ pub trait AudioOutputSample:
 
 impl AudioOutputSample for f32 {}
 
-pub struct AudioOutputFactory;
+pub fn open(spec: &SignalSpec, duration: Duration) -> Box<dyn AudioOutput> {
+    let host = cpal::default_host();
+    let device = host.default_output_device().unwrap();
+    let config = device.default_output_config().unwrap();
 
-impl AudioOutputFactory {
-    pub fn open(spec: &SignalSpec, duration: Duration) -> Box<dyn AudioOutput> {
-        let host = cpal::default_host();
-        let device = host.default_output_device().unwrap();
-        let config = device.default_output_config().unwrap();
-
-        match config.sample_format() {
-            cpal::SampleFormat::F32 => Box::new(Output::<f32>::open(spec, duration, device)),
-            format => panic!("unimplemented sample format: {format}"),
-        }
+    match config.sample_format() {
+        cpal::SampleFormat::F32 => Box::new(Output::<f32>::open(spec, duration, device)),
+        format => panic!("unimplemented sample format: {format}"),
     }
 }
 

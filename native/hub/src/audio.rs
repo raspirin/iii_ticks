@@ -1,5 +1,4 @@
 use symphonia::core::{
-    audio::AudioBufferRef,
     codecs::{Decoder, CODEC_TYPE_NULL},
     formats::FormatReader,
     io::{MediaSource, MediaSourceStream},
@@ -42,7 +41,6 @@ impl Audio {
             decoder,
         }
     }
-
 }
 
 #[cfg(test)]

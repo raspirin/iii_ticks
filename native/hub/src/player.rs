@@ -1,4 +1,7 @@
-use crate::{audio::Audio, output::{AudioOutput, AudioOutputFactory, Output}};
+use crate::{
+    audio::Audio,
+    output::{self, AudioOutput},
+};
 use std::fs::File;
 
 pub struct Player {
@@ -29,13 +32,13 @@ impl Player {
                     if self.output.is_none() {
                         let spec = *decoded.spec();
                         let duration = decoded.capacity() as u64;
-                        self.output.replace(AudioOutputFactory::open(&spec, duration));
+                        self.output.replace(output::open(&spec, duration));
                     }
 
                     if let Some(output) = &mut self.output {
                         output.write(decoded);
                     }
-                },
+                }
                 Err(e) => panic!("decoded error: {e}"),
             }
         }
