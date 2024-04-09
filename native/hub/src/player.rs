@@ -117,6 +117,13 @@ impl Player {
             }
         }
     }
+
+    pub fn pause(&mut self) -> Result<(), PlayerError> {
+        if self.output.is_some() {
+            self.output.as_mut().map(|x| x.flush());
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
