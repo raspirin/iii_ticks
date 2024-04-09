@@ -1,9 +1,9 @@
-use thiserror::Error;
 use crate::{
     audio::{Audio, AudioError},
     output::{self, AudioOutput, AudioOutputError},
 };
 use std::{collections::HashMap, fs::File, io};
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum PlayerError {
@@ -41,7 +41,7 @@ impl Player {
             audio: path.to_string(),
         })
     }
-    
+
     pub fn open(&mut self, path: &str) -> Result<(), PlayerError> {
         if !self.audio_map.contains_key(path) {
             let file = File::open(path)?;
@@ -59,12 +59,14 @@ impl Player {
         &self.audio_map[&self.audio]
     }
 
-    pub fn get_aduio_mut(&mut self) -> &mut Audio {
-        self.audio_map.get_mut(&self.audio).unwrap()
-    }
-
     pub fn tick(&mut self) -> Result<(), PlayerError> {
-        let packet = match self.get_aduio_mut().format.next_packet() {
+        let packet = match self
+            .audio_map
+            .get_mut(&self.audio)
+            .unwrap()
+            .format
+            .next_packet()
+        {
             Ok(p) => p,
             Err(symphonia::core::errors::Error::ResetRequired) => unimplemented!(),
             Err(symphonia::core::errors::Error::IoError(e)) => {
@@ -82,7 +84,13 @@ impl Player {
             return Ok(());
         }
 
-        match self.audio_map.get_mut(&self.audio).unwrap().decoder.decode(&packet) {
+        match self
+            .audio_map
+            .get_mut(&self.audio)
+            .unwrap()
+            .decoder
+            .decode(&packet)
+        {
             Ok(decoded) => {
                 if self.output.is_none() {
                     let spec = *decoded.spec();
