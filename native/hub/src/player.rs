@@ -18,6 +18,8 @@ pub enum PlayerError {
     PacketError(#[source] symphonia::core::errors::Error),
     #[error("Error when decoding: {0}")]
     DecodeError(#[source] symphonia::core::errors::Error),
+    #[error("EOF")]
+    EOF,
 }
 
 pub struct Player {
@@ -36,37 +38,49 @@ impl Player {
         })
     }
 
+    pub fn tick(&mut self) -> Result<(), PlayerError> {
+        let packet = match self.audio.format.next_packet() {
+            Ok(p) => p,
+            Err(symphonia::core::errors::Error::ResetRequired) => unimplemented!(),
+            Err(symphonia::core::errors::Error::IoError(e)) => {
+                if let io::ErrorKind::UnexpectedEof = e.kind() {
+                    return Err(PlayerError::EOF);
+                } else {
+                    return Err(PlayerError::PacketError(
+                        symphonia::core::errors::Error::IoError(e),
+                    ));
+                }
+            }
+            Err(e) => return Err(PlayerError::PacketError(e)),
+        };
+        if packet.track_id() != self.audio.track_id {
+            return Ok(());
+        }
+
+        match self.audio.decoder.decode(&packet) {
+            Ok(decoded) => {
+                if self.output.is_none() {
+                    let spec = *decoded.spec();
+                    let duration = decoded.capacity() as u64;
+                    self.output.replace(output::try_open(&spec, duration)?);
+                }
+
+                if let Some(output) = &mut self.output {
+                    output.write(decoded);
+                }
+            }
+            Err(e) => return Err(PlayerError::DecodeError(e)),
+        }
+
+        Ok(())
+    }
+
     pub fn play(&mut self) -> Result<(), PlayerError> {
         loop {
-            let packet = match self.audio.format.next_packet() {
-                Ok(p) => p,
-                Err(symphonia::core::errors::Error::ResetRequired) => unimplemented!(),
-                Err(symphonia::core::errors::Error::IoError(e)) => {
-                    if let io::ErrorKind::UnexpectedEof = e.kind() {
-                        break Ok(()); 
-                    } else {
-                        break Err(PlayerError::PacketError(symphonia::core::errors::Error::IoError(e)));
-                    }
-                }
-                Err(e) => break Err(PlayerError::PacketError(e)),
-            };
-            if packet.track_id() != self.audio.track_id {
-                continue;
-            }
-
-            match self.audio.decoder.decode(&packet) {
-                Ok(decoded) => {
-                    if self.output.is_none() {
-                        let spec = *decoded.spec();
-                        let duration = decoded.capacity() as u64;
-                        self.output.replace(output::try_open(&spec, duration)?);
-                    }
-
-                    if let Some(output) = &mut self.output {
-                        output.write(decoded);
-                    }
-                }
-                Err(e) => break Err(PlayerError::DecodeError(e)),
+            match self.tick() {
+                Ok(()) => continue,
+                Err(PlayerError::EOF) => break Ok(()),
+                e => break e,
             }
         }
     }
@@ -80,5 +94,11 @@ mod tests {
     fn make_player() {
         let mut player = Player::new("../../assets/native/test.ogg").unwrap();
         player.play().unwrap();
+    }
+
+    #[test]
+    fn test_player_tick() {
+        let mut player = Player::new("../../assets/native/test.ogg").unwrap();
+        player.tick().unwrap();
     }
 }
