@@ -1,6 +1,6 @@
 use symphonia::core::{
     codecs::{Decoder, CODEC_TYPE_NULL},
-    formats::FormatReader,
+    formats::{FormatReader, SeekMode, SeekTo},
     io::{MediaSource, MediaSourceStream},
     probe::Hint,
 };
@@ -14,6 +14,8 @@ pub enum AudioError {
     TrackNotFound,
     #[error("Decoder error: {0}")]
     DecoderError(#[source] symphonia::core::errors::Error),
+    #[error("Unable to reset to the starting point.")]
+    SeekError(#[source] symphonia::core::errors::Error),
 }
 
 pub struct Audio {
@@ -59,6 +61,19 @@ impl Audio {
             track_id,
             decoder,
         })
+    }
+
+    pub fn reset(&mut self) -> Result<(), AudioError> {
+        if let Err(e) = self.format.seek(
+            SeekMode::Accurate,
+            SeekTo::TimeStamp {
+                ts: 0,
+                track_id: self.track_id,
+            },
+        ) {
+            return Err(AudioError::SeekError(e));
+        }
+        Ok(())
     }
 }
 

@@ -24,6 +24,7 @@ pub enum AudioOutputError {
 pub trait AudioOutput {
     fn write(&mut self, decoded: AudioBufferRef);
     fn flush(&mut self);
+    fn steam_play(&mut self) -> Result<(), AudioOutputError>;
 }
 
 pub trait AudioOutputSample:
@@ -124,6 +125,11 @@ impl<T: AudioOutputSample> AudioOutput for Output<T> {
 
     fn flush(&mut self) {
         self.flush()
+    }
+
+    fn steam_play(&mut self) -> Result<(), AudioOutputError> {
+        self.stream.play()?;
+        Ok(())
     }
 }
 

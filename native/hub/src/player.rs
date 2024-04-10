@@ -43,14 +43,23 @@ impl Player {
     }
 
     pub fn open(&mut self, path: &str) -> Result<(), PlayerError> {
+        let mut need_reset = true;
         if !self.audio_map.contains_key(path) {
             let file = File::open(path)?;
             let audio = Audio::try_new(Box::new(file))?;
             self.audio_map.insert(path.to_string(), audio);
+            need_reset = false;
         }
 
         self.audio = path.to_string();
-        self.output.as_mut().map(|x| x.flush());
+        if need_reset {
+            self.audio_map.get_mut(path).map(|x| x.reset());
+        }
+        let play_result = self.output.as_mut().map(|x| {
+            x.flush();
+            x.steam_play()
+        });
+        play_result.expect("Missing output unit when reusing player")?;
 
         Ok(())
     }
