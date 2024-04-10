@@ -90,3 +90,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+fonts:
+  - family: MonomaniacOne
+    fonts:
+      - asset: fonts/MonomaniacOne-Regular.ttf
