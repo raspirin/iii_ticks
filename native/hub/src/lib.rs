@@ -19,13 +19,18 @@ async fn main() {
 pub async fn start(sender: std::sync::mpsc::Sender<player_thread::ThreadMessage>) {
     use messages::main::*;
 
-    let mut dart_signal_receiver = StartButtonPressed::get_dart_signal_receiver();
-    while let Some(_) = dart_signal_receiver.recv().await {
-        sender
-            .send(player_thread::ThreadMessage::Play(
-                "assets/native/test.ogg".into(),
-            ))
-            // TODO: fix this unwrap
-            .unwrap();
+    let mut dart_signal_receiver = PlayerThreadMessage::get_dart_signal_receiver();
+    while let Some(msg) = dart_signal_receiver.recv().await {
+        let ty = msg.message.ty();
+        match ty {
+            player_thread_message::MessageType::Play => {
+                let source_name = msg.message.source;
+                sender
+                    .send(player_thread::ThreadMessage::Play(source_name))
+                    // TODO: fix this unwrap
+                    .unwrap();
+            }
+            player_thread_message::MessageType::Pause => todo!(),
+        }
     }
 }

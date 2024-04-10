@@ -12,7 +12,7 @@ pub enum ThreadMessage {
 /// Init a sync thread which listen to tokio thread and holds the player.
 pub fn init_player_thread() -> std::sync::mpsc::Sender<ThreadMessage> {
     let (tx, rx) = std::sync::mpsc::channel::<ThreadMessage>();
-    let player_thread_handle = std::thread::spawn(move || {
+    std::thread::spawn(move || {
         thread(rx, |e| {
             debug_print!("{e}");
         })
