@@ -2,11 +2,6 @@ syntax = "proto3";
 package main;
 
 // [RINF:DART-SIGNAL]
-message StartButtonPressed { 
-    // bool start = 1;
-}
-
-// [RINF:DART-SIGNAL]
 message PlayerThreadMessage {
     enum MessageType {
         Play = 0;
