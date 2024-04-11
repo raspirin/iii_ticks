@@ -3,7 +3,7 @@ use rinf::debug_print;
 use std::path::PathBuf;
 use tokio_with_wasm::tokio::{fs, sync::Mutex};
 
-use crate::messages::{self, main::PlatformPathMessage};
+use crate::messages::main::PlatformPathMessage;
 
 type P = Mutex<Option<PathBuf>>;
 
@@ -24,12 +24,12 @@ pub async fn init_persist_storage() {
         }
     }
     debug_print!("end of if");
-    
+
     if let Some(x) = config_path.as_ref() {
         match fs::try_exists(x).await {
             Ok(is_exist) => {
                 debug_print!("path exist? {is_exist}");
-            },
+            }
             Err(e) => panic!("Fail to test if path exists: {e}"),
         }
     }
