@@ -21,5 +21,4 @@ symphonia = "0.5.4"
 rb = "0.4.1"
 thiserror = "1.0.58"
 lazy_static = "1.4.0"
-directories = "5.0"
 
