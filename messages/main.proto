@@ -2,6 +2,11 @@ syntax = "proto3";
 package main;
 
 // [RINF:DART-SIGNAL]
+message PlatformPathMessage {
+    string config_path = 1;
+}
+
+// [RINF:DART-SIGNAL]
 message PlayerThreadMessage {
     enum MessageType {
         Play = 0;
@@ -10,3 +15,4 @@ message PlayerThreadMessage {
     MessageType ty = 1;
     string source = 2;
 }
+

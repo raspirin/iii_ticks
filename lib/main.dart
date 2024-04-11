@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:iii_ticks/messages/main.pb.dart';
+import 'package:iii_ticks/platform.dart';
 import 'package:iii_ticks/simple.dart';
 import './messages/generated.dart';
 
 void main() async {
   await initializeRust();
+  await sendPlatformSpecificData();
   runApp(const MyApp());
 }
 

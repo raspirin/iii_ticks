@@ -1,6 +1,7 @@
 #![deny(clippy::unwrap_used)]
 
 use player_thread::init_player_thread;
+use rinf::debug_print;
 use tokio_with_wasm::tokio;
 
 mod audio;
@@ -9,11 +10,13 @@ mod messages;
 mod output;
 mod player;
 mod player_thread;
+mod storage;
 
 rinf::write_interface!();
 
 async fn main() {
     tokio::spawn(start(init_player_thread()));
+    tokio::spawn(storage::init_persist_storage());
 }
 
 pub async fn start(sender: std::sync::mpsc::Sender<player_thread::ThreadMessage>) {
