@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:iii_ticks/messages/main.pb.dart';
-import 'package:iii_ticks/platform.dart';
 import 'package:iii_ticks/simple.dart';
 import './messages/generated.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() async {
   await initializeRust();
-  await sendPlatformSpecificData();
   runApp(const MyApp());
 }
 
@@ -16,6 +15,8 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    sendPlatformPathToRust();
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -26,5 +27,11 @@ class MyApp extends StatelessWidget {
                   TextStyle(fontFamily: "MonomaniacOne", fontSize: 12))),
       home: const SimpleMain(),
     );
+  }
+
+  void sendPlatformPathToRust() {
+    final path = getApplicationSupportDirectory();
+    path.then((value) =>
+        PlatformPathMessage(configPath: value.path).sendSignalToRust(null));
   }
 }
