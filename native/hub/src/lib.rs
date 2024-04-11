@@ -1,7 +1,7 @@
 #![deny(clippy::unwrap_used)]
 
 use player_thread::init_player_thread;
-use tokio_with_wasm::tokio::{self};
+use tokio_with_wasm::tokio;
 
 mod audio;
 #[allow(clippy::unwrap_used)]

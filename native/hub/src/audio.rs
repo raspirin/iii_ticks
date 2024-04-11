@@ -38,7 +38,7 @@ impl Audio {
             &Default::default(),
         ) {
             Ok(p) => p,
-            Err(e) => return Err(AudioError::DecoderError(e)),
+            Err(e) => return Err(AudioError::ProbeError(e)),
         };
 
         let format = probed.format;
@@ -86,6 +86,6 @@ mod tests {
     #[test]
     fn test_make_audio() {
         let file = File::open("../../assets/native/test.ogg").unwrap();
-        let mut audio = Audio::try_new(Box::new(file));
+        let _audio = Audio::try_new(Box::new(file));
     }
 }

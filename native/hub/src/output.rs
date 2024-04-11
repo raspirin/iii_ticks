@@ -141,7 +141,7 @@ mod tests {
     fn print_config() {
         let host = cpal::default_host();
         let device = host.default_output_device().unwrap();
-        let configs = device.default_output_config().unwrap();
+        let _configs = device.default_output_config().unwrap();
         // println!("{:?}", configs)
     }
 }
