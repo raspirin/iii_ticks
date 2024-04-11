@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:iii_ticks/utils.dart';
 
 class SimpleMain extends StatefulWidget {
@@ -65,7 +63,7 @@ class _SimpleMainState extends State<SimpleMain> {
         ),
         right: Container(
           color: Theme.of(context).colorScheme.background,
-          child: Text("World!"),
+          child: const Text("World!"),
         ));
   }
 }

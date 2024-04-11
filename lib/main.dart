@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
           primaryTextTheme: const TextTheme(
               displaySmall:
                   TextStyle(fontFamily: "MonomaniacOne", fontSize: 12))),
-      home: SimpleMain(),
+      home: const SimpleMain(),
     );
   }
 }
